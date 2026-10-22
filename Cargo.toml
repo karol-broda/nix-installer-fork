@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/nix-mountd"]
+members = [".", "crates/nix-mountd", "crates/spike-macros"]
 
 [package]
 name = "nix-installer"
