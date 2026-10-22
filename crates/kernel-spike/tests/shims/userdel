@@ -1,0 +1,9 @@
+#!/bin/sh
+# Fake userdel: removes the user's line from $SPIKE_SHIM_STATE.
+state="${SPIKE_SHIM_STATE:?SPIKE_SHIM_STATE not set}"
+name="$1"
+[ -n "$name" ] || exit 2
+touch "$state"
+grep -v "^$name " "$state" > "$state.new"
+mv "$state.new" "$state"
+exit 0

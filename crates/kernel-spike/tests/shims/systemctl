@@ -1,0 +1,37 @@
+#!/bin/sh
+# Fake systemctl for the kernel spike. Supports exactly what the
+# enable_systemd_unit handler uses:
+#   systemctl enable --now UNIT    -> append "active:UNIT", exit 0
+#   systemctl disable --now UNIT   -> remove the line, exit 0
+#   systemctl is-active UNIT       -> exit 0 + "active" if enabled, else exit 3
+state="${SPIKE_SHIM_STATE:?SPIKE_SHIM_STATE not set}"
+action="$1"
+[ -n "$action" ] || exit 2
+case "$action" in
+  enable|disable)
+    unit="$3"
+    [ -n "$unit" ] || exit 2
+    touch "$state"
+    if [ "$action" = "enable" ]; then
+      echo "active:$unit" >> "$state"
+    else
+      grep -v "^active:$unit$" "$state" > "$state.new"
+      mv "$state.new" "$state"
+    fi
+    exit 0
+    ;;
+  is-active)
+    unit="$2"
+    [ -n "$unit" ] || exit 2
+    if grep -q "^active:$unit$" "$state" 2>/dev/null; then
+      echo "active"
+      exit 0
+    fi
+    echo "inactive" >&2
+    exit 3
+    ;;
+  *)
+    echo "systemctl shim: unsupported: $*" >&2
+    exit 1
+    ;;
+esac
