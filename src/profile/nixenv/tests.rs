@@ -1,5 +1,5 @@
 use std::io::Write;
-use std::os::unix::{ffi::OsStringExt, fs::PermissionsExt};
+use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
 
 use super::NixCommandExt;
@@ -72,15 +72,13 @@ fn test_set_profile_to_is_explicit() {
     let bin = nix_store.path().join("bin");
     std::fs::create_dir(&bin).unwrap();
 
-    let nix_env = bin.join("nix-env");
+    let script = nix_store.path().join("nix-env.sh");
     std::fs::write(
-        &nix_env,
+        &script,
         "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"${0%/*}/../args\"\n",
     )
     .unwrap();
-    let mut permissions = std::fs::metadata(&nix_env).unwrap().permissions();
-    permissions.set_mode(0o755);
-    std::fs::set_permissions(&nix_env, permissions).unwrap();
+    crate::profile::test_support::install_executable(&script, &bin.join("nix-env"));
 
     let profile = nix_store.path().join("configured-profile");
     let target = nix_store.path().join("target");

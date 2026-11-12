@@ -3,6 +3,23 @@ use std::path::{Path, PathBuf};
 pub(crate) mod nixenv;
 pub(crate) mod nixprofile;
 
+#[cfg(test)]
+pub(crate) mod test_support {
+    use std::path::Path;
+
+    /// Creates `dest` in a child process, so no descriptor writing to it is ever open in this
+    /// process. Otherwise a concurrent test's fork inherits that descriptor
+    pub(crate) fn install_executable(src: &Path, dest: &Path) {
+        let status = std::process::Command::new("install")
+            .args(["-m", "755"])
+            .arg(src)
+            .arg(dest)
+            .status()
+            .unwrap();
+        assert!(status.success(), "installing {} failed", dest.display());
+    }
+}
+
 #[non_exhaustive]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
